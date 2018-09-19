@@ -1,10 +1,11 @@
-const iconv = require('iconv-lite');
-const MongoClient = require('mongodb').MongoClient;
+const iconv = require('iconv-lite')
+const MongoClient = require('mongodb').MongoClient
 const traverse = require('traverse')
-var db, client;
-var timeout = null;
+const dbTypes = ["unconfirmed", "confirmed"]
+var db, client
+var timeout = null
 var read = async function(r) {
-  let result = {};
+  let result = {}
   if (r.request) {
     let query = r.request
     if (r.request.find) {
@@ -12,22 +13,29 @@ var read = async function(r) {
     } else if (r.request.aggregate) {
       query.aggregate = encode(r.request.aggregate, r.request.encoding)
     }
-    let src = (r.request.db && r.request.db.length > 0) ? r.request.db : ["unconfirmed", "confirmed"]
+    let src = (r.request.db && r.request.db.length > 0) ? r.request.db : dbTypes
+    let promises = []
     for (let i=0; i<src.length; i++) {
       let key = src[i]
-      try {
-        result[key] = await lookup({ request: query, response: r.response }, key)
-      } catch (e) {
-        console.log("Error", e)
-        if (result.errors) {
-          result.errors.push(e.toString())
-        } else {
-          result.errors = [e.toString()]
-        }
+      if (dbTypes.indexOf(key) >= 0) {
+        promises.push(lookup({ request: query, response: r.response }, key))
+      }
+    }
+    try {
+      let responses = await Promise.all(promises)
+      responses.forEach(function(response) {
+        result[response.name] = response.items
+      })
+    } catch (e) {
+      console.log("Error", e)
+      if (result.errors) {
+        result.errors.push(e.toString())
+      } else {
+        result.errors = [e.toString()]
       }
     }
   }
-  return result;
+  return result
 }
 var exit = function() {
   client.close()
@@ -43,9 +51,9 @@ var init = function(config) {
         socketTimeoutMS: sockTimeout
       }, function(err, _client) {
         if (err) console.log(err)
-        client = _client;
+        client = _client
         if (config && config.timeout) {
-          timeout = config.timeout;
+          timeout = config.timeout
         }
         db = client.db(name)
         resolve({ read: read, exit: exit })
@@ -57,9 +65,9 @@ var init = function(config) {
 }
 var lookup = function(r, collectionName) {
   let collection = db.collection(collectionName)
-  let query = r.request;
+  let query = r.request
   return new Promise(async function(resolve, reject) {
-    let cursor;
+    let cursor
     if (query.find || query.aggregate) {
       if (query.find) {
         cursor = collection.find(query.find, { allowDiskUse:true })
@@ -89,9 +97,15 @@ var lookup = function(r, collectionName) {
         } else {
           if (r.response && r.response.encoding) {
             let transformed = decode(docs, r.response.encoding)
-            resolve(transformed)
+            resolve({
+              name: collectionName,
+              items: transformed
+            })
           } else {
-            resolve(docs)
+            resolve({
+              name: collectionName,
+              items: docs
+            })
           }
         }
       })
@@ -100,7 +114,10 @@ var lookup = function(r, collectionName) {
       if (query.distinct.field) {
         try {
           let items = await collection.distinct(query.distinct.field, query.distinct.query, query.distinct.options)
-          resolve(items)
+          resolve({
+            name: collectionName,
+            items: items
+          })
         } catch (e) {
           reject(e)
         }
@@ -109,45 +126,45 @@ var lookup = function(r, collectionName) {
   })
 }
 var encode = function(subtree, encoding_schema) {
-  let copy = subtree;
+  let copy = subtree
   traverse(copy).forEach(function(token) {
     if (this.isLeaf) {
-      let encoding = "utf8";
-      let newVal = token;
-      let node = this;
+      let encoding = "utf8"
+      let newVal = token
+      let node = this
       if (/^([0-9]+|\$).*/.test(node.key)) {
         while(!node.isRoot) {
-          node = node.parent;
+          node = node.parent
           if (/^(in|out)put\.b[0-9]+/.test(node.key)) {
-            break;
+            break
           }
         }
       }
 
       if (encoding_schema && encoding_schema[node.key]) {
-        encoding = encoding_schema[node.key];   
+        encoding = encoding_schema[node.key]
       }
 
       if (/^(in|out)put\.b[0-9]+/.test(node.key)) {
-        newVal = iconv.encode(token, encoding).toString("base64");
+        newVal = iconv.encode(token, encoding).toString("base64")
       }
       this.update(newVal)
     }
   })
-  return copy;
+  return copy
 }
 var decode = function(subtree, encoding_schema) {
-  let copy = subtree;
+  let copy = subtree
   traverse(copy).forEach(function(token) {
     if (this.isLeaf) {
-      let encoding = "base64";
-      let newVal = token;
-      let node = this;
+      let encoding = "base64"
+      let newVal = token
+      let node = this
       if (/^([0-9]+|\$).*/.test(node.key)) {
         while(!node.isRoot) {
-          node = node.parent;
+          node = node.parent
           if (/^(in|out)put\.b[0-9]+/.test(node.key)) {
-            break;
+            break
           }
         }
       }
@@ -155,15 +172,15 @@ var decode = function(subtree, encoding_schema) {
         return !/^[0-9]+$/.test(p)
       }).join(".")
       if (encoding_schema && encoding_schema[currentKey]) {
-        encoding = encoding_schema[currentKey];   
+        encoding = encoding_schema[currentKey]
       }
       if (/^b[0-9]+/.test(node.key)) {
-        newVal = iconv.encode(token, "base64").toString(encoding);
+        newVal = iconv.encode(token, "base64").toString(encoding)
       }
       this.update(newVal)
     }
   })
-  return copy;
+  return copy
 }
 module.exports = {
   init: init,

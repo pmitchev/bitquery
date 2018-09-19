@@ -14,6 +14,8 @@ npm install --save bitquery
 
 First initialize, and use the returned db object to make the query. 
 
+## 1. Using Promises
+
 
 ```
 var bitquery = require('bitquery')
@@ -45,7 +47,39 @@ bitquery.init().then(function(db) {
 })
 ```
 
-> Note: By default, bitquery connects to `mongodb://localhost:27017` so you don't need to configure anything if you set up BitDB without changing anything.
+## 2. Using Async-Await
+
+```
+var bitquery = require('bitquery')
+var bql = {
+  "request": {
+    "encoding": {
+      "output.b0": "hex"
+    },
+    "find": {
+      "output.b0": "6d02"
+    },
+    "sort": {
+      "output.b1": 1
+    },
+    "limit": 50
+  },
+  "response": {
+    "encoding": {
+      "output.b0": "hex",
+      "output.b1": "utf8",
+      "output.b2": "hex"
+    }
+  }
+};
+(async function () {
+  let db = await bitquery.init();
+  let response = await db.read(bql);
+  console.log("Response = ", response)
+})();
+```
+
+> Note: By default bitquery connects to `mongodb://localhost:27017` so you don't need to configure anything if you set up BitDB without changing anything.
 
 # BitDB Query Language
 
@@ -77,9 +111,9 @@ bitquery.init({
 Set request timeout in milliseconds. All BitDB requests will time out after this duration.
 
 ```
-var init = async function() {
-  let db = await bitquery.init({
-    timeout: 20000
-  })
-}
+bitquery.init({
+  timeout: 20000
+}).then(function(db) {
+  ...
+})
 ```
