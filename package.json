@@ -1,0 +1,13 @@
+{
+  "name": "bitquery",
+  "version": "0.1.0",
+  "description": "javascript query engine for bitdb",
+  "main": "index.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "iconv-lite": "^0.4.24",
+    "mongodb": "^3.1.4",
+    "traverse": "^0.6.6"
+  }
+}
