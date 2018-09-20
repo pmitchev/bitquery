@@ -116,7 +116,7 @@ var lookup = function(r, collectionName) {
       if (query.sort) {
         cursor = cursor.sort(query.sort)
       } else {
-        cursor = cursor.sort({block_index: -1})
+        cursor = cursor.sort({'block.index': -1})
       }
       if (query.project) {
         cursor = cursor.project(query.project)
