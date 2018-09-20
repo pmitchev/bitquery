@@ -1,8 +1,12 @@
 # Bitquery
 
-Query BitDB
-
 Bitquery is a JavaScript library that lets you query a BitDB node.
+
+# Prerequiesites
+
+Bitquery is a query engine that directly interfaces with a BitDB node. You must have access to a BitDB node through either a local or remote MongoDB URL.
+
+> If you're looking for a public HTTP endpoint, you can use the API at [bitdb.network](https://bitdb.network)
 
 # Install
 
