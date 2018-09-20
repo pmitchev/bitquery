@@ -3,6 +3,9 @@ const MongoClient = require('mongodb').MongoClient
 const traverse = require('traverse')
 const dbTypes = ["unconfirmed", "confirmed"]
 const validKeys = new Set([
+  "_id",
+  "opcodenum",
+
   "request",
   "response",
   "encoding",
@@ -41,42 +44,37 @@ const validKeys = new Set([
 var db, client
 var timeout = null
 var read = async function(r) {
-  let isvalid = validate(r)
-  if (isvalid) {
-    let result = {}
-    if (r.request) {
-      let query = r.request
-      if (r.request.find) {
-        query.find = encode(r.request.find, r.request.encoding)
-      } else if (r.request.aggregate) {
-        query.aggregate = encode(r.request.aggregate, r.request.encoding)
-      }
-      let src = (r.request.db && r.request.db.length > 0) ? r.request.db : dbTypes
-      let promises = []
-      for (let i=0; i<src.length; i++) {
-        let key = src[i]
-        if (dbTypes.indexOf(key) >= 0) {
-          promises.push(lookup({ request: query, response: r.response }, key))
-        }
-      }
-      try {
-        let responses = await Promise.all(promises)
-        responses.forEach(function(response) {
-          result[response.name] = response.items
-        })
-      } catch (e) {
-        console.log("Error", e)
-        if (result.errors) {
-          result.errors.push(e.toString())
-        } else {
-          result.errors = [e.toString()]
-        }
+  let result = {}
+  if (r.request) {
+    let query = r.request
+    if (r.request.find) {
+      query.find = encode(r.request.find, r.request.encoding)
+    } else if (r.request.aggregate) {
+      query.aggregate = encode(r.request.aggregate, r.request.encoding)
+    }
+    let src = (r.request.db && r.request.db.length > 0) ? r.request.db : dbTypes
+    let promises = []
+    for (let i=0; i<src.length; i++) {
+      let key = src[i]
+      if (dbTypes.indexOf(key) >= 0) {
+        promises.push(lookup({ request: query, response: r.response }, key))
       }
     }
-    return result
-  } else {
-    return { errors: ["invalid query"] }
+    try {
+      let responses = await Promise.all(promises)
+      responses.forEach(function(response) {
+        result[response.name] = response.items
+      })
+    } catch (e) {
+      console.log("Error", e)
+      if (result.errors) {
+        result.errors.push(e.toString())
+      } else {
+        result.errors = [e.toString()]
+      }
+    }
   }
+  return result
 }
 var exit = function() {
   client.close()
