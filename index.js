@@ -2,45 +2,6 @@ const iconv = require('iconv-lite')
 const MongoClient = require('mongodb').MongoClient
 const traverse = require('traverse')
 const dbTypes = ["unconfirmed", "confirmed"]
-const validKeys = new Set([
-  "_id",
-  "opcodenum",
-
-  "request",
-  "response",
-  "encoding",
-  "find",
-  "aggregate",
-  "project",
-  "sort",
-  "limit",
-  "distinct",
-
-  "tx",
-  "tx.hash",
-
-  "block",
-  "block.hash",
-  "block.time",
-  "block.index",
-
-  "input",
-  "input.index",
-  "input.b0", "input.b1", "input.b2", "input.b3", "input.b4", "input.b5", "input.b6", "input.b7", "input.b8", "input.b9", "input.b10", "input.b11", "input.b12", "input.b13", "input.b14", "input.b15", "input.b16", 
-  "input.sender",
-  "input.sender.a",
-  "input.sender.tx",
-  "input.sender.index",
-
-  "output",
-  "output.index",
-  "output.b0", "output.b1", "output.b2", "output.b3", "output.b4", "output.b5", "output.b6", "output.b7", "output.b8", "output.b9", "output.b10", "output.b11", "output.b12", "output.b13", "output.b14", "output.b15", "output.b16",
-  "output.s0", "output.s1", "output.s2", "output.s3", "output.s4", "output.s5", "output.s6", "output.s7", "output.s8", "output.s9", "output.s10", "output.s11", "output.s12", "output.s13", "output.s14", "output.s15", "output.s16",
-  "output.receiver",
-  "output.receiver.a",
-  "output.receiver.index",
-  "output.receiver.v"
-])
 var db, client
 var timeout = null
 var read = async function(r) {
@@ -164,22 +125,6 @@ var lookup = function(r, collectionName) {
     }
   })
 }
-var validate = function(subtree) {
-  let isvalid = true;
-  traverse(subtree).forEach(function(token) {
-    if (this.key) {
-      if(validKeys.has(this.key)) {
-        // valid
-      } else if (this.key[0] === '$') {
-        // valid
-      } else {
-        // invalid
-        isvalid = false;
-      }
-    }
-  })
-  return isvalid;
-}
 var encode = function(subtree, encoding_schema) {
   let copy = subtree
   traverse(copy).forEach(function(token) {
@@ -239,5 +184,6 @@ var decode = function(subtree, encoding_schema) {
 }
 module.exports = {
   init: init,
+  exit: exit,
   read: read
 }
