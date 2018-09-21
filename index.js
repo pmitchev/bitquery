@@ -190,7 +190,7 @@ var encode = function(subtree, encoding_schema) {
       if (/^([0-9]+|\$).*/.test(node.key)) {
         while(!node.isRoot) {
           node = node.parent
-          if (/^(in|out)put\.b[0-9]+/.test(node.key)) {
+          if (/^(in|out)\.b[0-9]+/.test(node.key)) {
             break
           }
         }
@@ -200,7 +200,7 @@ var encode = function(subtree, encoding_schema) {
         encoding = encoding_schema[node.key]
       }
 
-      if (/^(in|out)put\.b[0-9]+/.test(node.key)) {
+      if (/^(in|out)\.b[0-9]+/.test(node.key)) {
         newVal = iconv.encode(token, encoding).toString("base64")
       }
       this.update(newVal)
@@ -218,7 +218,7 @@ var decode = function(subtree, encoding_schema) {
       if (/^([0-9]+|\$).*/.test(node.key)) {
         while(!node.isRoot) {
           node = node.parent
-          if (/^(in|out)put\.b[0-9]+/.test(node.key)) {
+          if (/^(in|out)\.b[0-9]+/.test(node.key)) {
             break
           }
         }
