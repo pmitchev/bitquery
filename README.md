@@ -121,3 +121,14 @@ bitquery.init({
   ...
 })
 ```
+
+# Bitdb Query Language
+
+The query language is a meta language built on top of MongoDB's own query language, which means 100% of MongoDB's queries are supported.
+
+Top level attributes:
+
+- v: version (default is 2)
+- e: encoding (declare the encoding of each query attribute)
+- q: query (MongoDB query)
+

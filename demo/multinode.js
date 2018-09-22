@@ -1,16 +1,14 @@
 const bitquery = require('../index')
 const bql1 = {
-  request: {
-    find: {}, limit: 3
-  }
+  v: 2,
+  e: { b1: "hex" },
+  q: { find: { b1: "6d02" }, sort: { "blk.i": -1 }, limit: 3 }
 };
 const bql2 = {
-  request: {
-    find: {
-      $text: {
-        $search: "hello"
-      }
-    },
+  v: 2,
+  q: {
+    find: { $text: { $search: "hello" } },
+    sort: { "blk.i": -1 },
     limit: 3
   }
 };

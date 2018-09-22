@@ -1,8 +1,7 @@
 var bitquery = require('../index')
 var bql = {
-  request: {
-    find: {}, limit: 5
-  }
+  v: 2,
+  q: { find: {}, limit: 5 }
 };
 (async function() {
   let db = await bitquery.init()

@@ -6,21 +6,29 @@ var db, client
 var timeout = null
 var read = async function(r) {
   let result = {}
-  if (r.request) {
-    let query = r.request
-    if (r.request.find) {
-      query.find = encode(r.request.find, r.request.encoding)
-    } else if (r.request.aggregate) {
-      query.aggregate = encode(r.request.aggregate, r.request.encoding)
+  // 1. v: version
+  // 2. e: encoding
+  // 3. q: query
+  if (r.q) {
+    let query = r.q
+    let encoding = r.e
+    if (query.find) {
+      query.find = encode(query.find, encoding)
+    } else if (query.aggregate) {
+      query.aggregate = encode(query.aggregate, encoding)
     }
-    let src = (r.request.db && r.request.db.length > 0) ? r.request.db : dbTypes
     let promises = []
+    console.log("query = ", query)
+    console.log("encoding = ", encoding)
+
+    let src = (query.db && query.db.length > 0) ? query.db : dbTypes
     for (let i=0; i<src.length; i++) {
       let key = src[i]
       if (dbTypes.indexOf(key) >= 0) {
-        promises.push(lookup({ request: query, response: r.response }, key))
+        promises.push(lookup({ request: query, encoding: encoding }, key))
       }
     }
+
     try {
       let responses = await Promise.all(promises)
       responses.forEach(function(response) {
@@ -95,18 +103,15 @@ var lookup = function(r, collectionName) {
         if (err) {
           reject(err)
         } else {
-          if (r.response && r.response.encoding) {
-            let transformed = decode(docs, r.response.encoding)
-            resolve({
-              name: collectionName,
-              items: transformed
-            })
-          } else {
-            resolve({
-              name: collectionName,
-              items: docs
-            })
+          let res = docs;
+          if (r.encoding) {
+            res = decode(docs, r.encoding)
           }
+          console.log(collectionName, "res = ", res)
+          resolve({
+            name: collectionName,
+            items: res
+          })
         }
       })
 
@@ -114,9 +119,13 @@ var lookup = function(r, collectionName) {
       if (query.distinct.field) {
         try {
           let items = await collection.distinct(query.distinct.field, query.distinct.query, query.distinct.options)
+          let res = items
+          if (r.encoding) {
+            res = decode(docs, r.encoding)
+          }
           resolve({
             name: collectionName,
-            items: items
+            items: res
           })
         } catch (e) {
           reject(e)
@@ -155,6 +164,7 @@ var encode = function(subtree, encoding_schema) {
 }
 var decode = function(subtree, encoding_schema) {
   let copy = subtree
+  console.log("copy = ", copy)
   traverse(copy).forEach(function(token) {
     if (this.isLeaf) {
       let encoding = "base64"
