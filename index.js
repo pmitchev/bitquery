@@ -27,9 +27,8 @@ var validate = function(r) {
 }
 var read = async function(r) {
   let isvalid = validate(r)
-  if (!isvalid.result) {
-    return { errors: isvalid.errors }
-  }
+  if (!isvalid.result) return isvalid;
+
   let result = {}
   // 1. v: version
   // 2. e: encoding
