@@ -9,6 +9,7 @@ describe('bitquery', function() {
       }
       let isvalid = validate(r)
       assert.equal(isvalid.result, false)
+      assert.equal(isvalid.status, 'invalid')
       assert(isvalid.errors.indexOf('v missing') >= 0)
     });
     it('a query with v is valid', function() {
@@ -17,6 +18,7 @@ describe('bitquery', function() {
         q: { find: {} }
       }
       let isvalid = validate(r)
+      assert.equal(isvalid.status, 'valid')
       assert.equal(isvalid.result, true)
     });
   })
@@ -29,6 +31,7 @@ describe('bitquery', function() {
       }
       let isvalid = validate(r)
       assert.equal(isvalid.result, false)
+      assert.equal(isvalid.status, 'invalid')
       assert(isvalid.errors.indexOf('q missing') >= 0)
     })
     it('top level q must contains something', function() {
@@ -38,6 +41,7 @@ describe('bitquery', function() {
       }
       let isvalid = validate(r)
       assert.equal(isvalid.result, false)
+      assert.equal(isvalid.status, 'invalid')
       assert(isvalid.errors.indexOf('q empty') >= 0)
     })
     it('top level q can only be one of the mongodb directives', function() {
@@ -49,6 +53,7 @@ describe('bitquery', function() {
       }
       let isvalid = validate(r)
       assert.equal(isvalid.result, false)
+      assert.equal(isvalid.status, 'invalid')
       const msg = "invalid MongoDB op(supported: find, aggregate, sort, project, limit, distinct)"
       assert(isvalid.errors.indexOf(msg) >= 0)
     })
@@ -77,6 +82,7 @@ describe('bitquery', function() {
       }]
       r.forEach(function(item) {
         let isvalid = validate(item)
+        assert.equal(isvalid.status, 'valid')
         assert.equal(isvalid.result, true)
       })
     })
