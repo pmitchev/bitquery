@@ -2,9 +2,34 @@ const iconv = require('iconv-lite')
 const MongoClient = require('mongodb').MongoClient
 const traverse = require('traverse')
 const dbTypes = ["unconfirmed", "confirmed"]
+const ops = ["find", "aggregate", "sort", "project", "limit", "distinct"]
 var db, client
 var timeout = null
+var validate = function(r) {
+  if (typeof r.v === 'undefined') {
+    return { result: false, errors: ["v missing"] }
+  }
+  if (typeof r.q === 'undefined') {
+    return { result: false, errors: ['q missing'] }
+  }
+  let keys = Object.keys(r.q)
+  if (keys.length === 0) {
+    return { result: false, errors: ['q empty'] }
+  }
+  let errors = []
+  for (let i=0; i<keys.length; i++) {
+    if (ops.indexOf(keys[i]) < 0) {
+      errors.push("invalid MongoDB op(supported: find, aggregate, sort, project, limit, distinct)")
+      return { result: false, errors: errors }
+    }
+  }
+  return { result: true }
+}
 var read = async function(r) {
+  let isvalid = validate(r)
+  if (!isvalid.result) {
+    return { errors: isvalid.errors }
+  }
   let result = {}
   // 1. v: version
   // 2. e: encoding
@@ -195,5 +220,6 @@ var decode = function(subtree, encoding_schema) {
 module.exports = {
   init: init,
   exit: exit,
-  read: read
+  read: read,
+  validate: validate
 }
