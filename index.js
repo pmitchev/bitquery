@@ -1,4 +1,5 @@
-const iconv = require('iconv-lite')
+require('dotenv').config()
+const bcode = require('bcode')
 const MongoClient = require('mongodb').MongoClient
 const traverse = require('traverse')
 const dbTypes = ["unconfirmed", "confirmed"]
@@ -37,14 +38,11 @@ var read = async function(r) {
     let query = r.q
     let encoding = r.e
     if (query.find) {
-      query.find = encode(query.find, encoding)
+      query.find = bcode.encode(query.find, encoding)
     } else if (query.aggregate) {
-      query.aggregate = encode(query.aggregate, encoding)
+      query.aggregate = bcode.encode(query.aggregate, encoding)
     }
     let promises = []
-    console.log("query = ", query)
-    console.log("encoding = ", encoding)
-
     let src = (query.db && query.db.length > 0) ? query.db : dbTypes
     for (let i=0; i<src.length; i++) {
       let key = src[i]
@@ -128,10 +126,7 @@ var lookup = function(r, collectionName) {
           reject(err)
         } else {
           let res = docs;
-          if (r.encoding) {
-            res = decode(docs, r.encoding)
-          }
-          console.log(collectionName, "res = ", res)
+          res = bcode.decode(docs, r.encoding)
           resolve({
             name: collectionName,
             items: res
@@ -144,9 +139,7 @@ var lookup = function(r, collectionName) {
         try {
           let items = await collection.distinct(query.distinct.field, query.distinct.query, query.distinct.options)
           let res = items
-          if (r.encoding) {
-            res = decode(docs, r.encoding)
-          }
+          res = bcode.decode(docs, r.encoding)
           resolve({
             name: collectionName,
             items: res
@@ -157,64 +150,6 @@ var lookup = function(r, collectionName) {
       }
     }
   })
-}
-var encode = function(subtree, encoding_schema) {
-  let copy = subtree
-  traverse(copy).forEach(function(token) {
-    if (this.isLeaf) {
-      let encoding = "utf8"
-      let newVal = token
-      let node = this
-      if (/^([0-9]+|\$).*/.test(node.key)) {
-        while(!node.isRoot) {
-          node = node.parent
-          if (/^(in|out)\.b[0-9]+/.test(node.key)) {
-            break
-          }
-        }
-      }
-
-      if (encoding_schema && encoding_schema[node.key]) {
-        encoding = encoding_schema[node.key]
-      }
-
-      if (/^(in|out)\.b[0-9]+/.test(node.key)) {
-        newVal = iconv.encode(token, encoding).toString("base64")
-      }
-      this.update(newVal)
-    }
-  })
-  return copy
-}
-var decode = function(subtree, encoding_schema) {
-  let copy = subtree
-  console.log("copy = ", copy)
-  traverse(copy).forEach(function(token) {
-    if (this.isLeaf) {
-      let encoding = "base64"
-      let newVal = token
-      let node = this
-      if (/^([0-9]+|\$).*/.test(node.key)) {
-        while(!node.isRoot) {
-          node = node.parent
-          if (/^(in|out)\.b[0-9]+/.test(node.key)) {
-            break
-          }
-        }
-      }
-      let currentKey = node.path.filter(function(p) {
-        return !/^[0-9]+$/.test(p)
-      }).join(".")
-      if (encoding_schema && encoding_schema[currentKey]) {
-        encoding = encoding_schema[currentKey]
-      }
-      if (/^b[0-9]+/.test(node.key)) {
-        newVal = iconv.encode(token, "base64").toString(encoding)
-      }
-      this.update(newVal)
-    }
-  })
-  return copy
 }
 module.exports = {
   init: init,
