@@ -3,7 +3,7 @@ const bcode = require('bcode')
 const MongoClient = require('mongodb').MongoClient
 const traverse = require('traverse')
 const dbTypes = ["unconfirmed", "confirmed"]
-const ops = ["find", "aggregate", "sort", "project", "limit", "distinct"]
+const ops = ["find", "aggregate", "sort", "project", "limit", "skip", "distinct"]
 var db, client
 var timeout = null
 var validate = function(r) {
@@ -20,7 +20,7 @@ var validate = function(r) {
   let errors = []
   for (let i=0; i<keys.length; i++) {
     if (ops.indexOf(keys[i]) < 0) {
-      errors.push("invalid MongoDB op(supported: find, aggregate, sort, project, limit, distinct)")
+      errors.push("invalid MongoDB op(supported: find, aggregate, sort, project, limit, skip, distinct)")
       return { status: "invalid", result: false, errors: errors }
     }
   }
@@ -116,6 +116,11 @@ var lookup = function(r, collectionName) {
         cursor = cursor.limit(query.limit)
       } else {
         cursor = cursor.limit(100)
+      }
+      if (query.skip) {
+        cursor = cursor.skip(query.skip)
+      } else {
+        cursor = cursor.skip(0)
       }
       if (timeout) {
         cursor = cursor.maxTimeMS(timeout)
