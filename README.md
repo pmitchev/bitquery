@@ -24,24 +24,12 @@ First initialize, and use the returned db object to make the query.
 ```
 var bitquery = require('bitquery')
 var bql = {
-  "request": {
-    "encoding": {
-      "output.b0": "hex"
-    },
+  "v": 3,
+  "q": {
     "find": {
-      "output.b0": "6d02"
-    },
-    "sort": {
-      "output.b1": 1
+      "out.h1": "6d02"
     },
     "limit": 50
-  },
-  "response": {
-    "encoding": {
-      "output.b0": "hex",
-      "output.b1": "utf8",
-      "output.b2": "hex"
-    }
   }
 }
 bitquery.init().then(function(db) {
@@ -56,24 +44,12 @@ bitquery.init().then(function(db) {
 ```
 var bitquery = require('bitquery')
 var bql = {
-  "request": {
-    "encoding": {
-      "output.b0": "hex"
-    },
+  "v": 3,
+  "q": {
     "find": {
-      "output.b0": "6d02"
-    },
-    "sort": {
-      "output.b1": 1
+      "out.h1": "6d02"
     },
     "limit": 50
-  },
-  "response": {
-    "encoding": {
-      "output.b0": "hex",
-      "output.b1": "utf8",
-      "output.b2": "hex"
-    }
   }
 };
 (async function () {
