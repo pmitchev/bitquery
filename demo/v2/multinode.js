@@ -1,8 +1,8 @@
-const bitquery = require('../index')
+const bitquery = require('../../index')
 const bql1 = {
   v: 2,
   e: { b1: "hex" },
-  q: { find: { b1: "6d02" }, sort: { "blk.i": -1 }, limit: 3 }
+  q: { find: { "out.b1": "6d02" }, sort: { "blk.i": -1 }, limit: 3 }
 };
 const bql2 = {
   v: 2,
@@ -14,10 +14,10 @@ const bql2 = {
 };
 (async function() {
   let db1 = await bitquery.init({
-    url: "mongodb://localhost:27017"
+    url: process.env.url ? process.env.url : "mongodb://localhost:27017"
   })
   let db2 = await bitquery.init({
-    url: "mongodb://localhost:27017"
+    url: process.env.url ? process.env.url : "mongodb://localhost:27017"
   })
   db1.read(bql1).then(function(response) {
     console.log("# Query = ", bql1)
