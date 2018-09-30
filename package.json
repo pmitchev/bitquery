@@ -1,6 +1,6 @@
 {
   "name": "bitquery",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "description": "javascript query engine for bitdb",
   "main": "index.js",
   "author": "",
@@ -9,6 +9,8 @@
     "test": "mocha"
   },
   "dependencies": {
+    "bcode": "0.0.5",
+    "dotenv": "^6.0.0",
     "iconv-lite": "^0.4.24",
     "mongodb": "^3.1.4",
     "traverse": "^0.6.6"
