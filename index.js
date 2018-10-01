@@ -119,8 +119,6 @@ var lookup = function(r, collectionName) {
       }
       if (query.skip) {
         cursor = cursor.skip(query.skip)
-      } else {
-        cursor = cursor.skip(0)
       }
       if (timeout) {
         cursor = cursor.maxTimeMS(timeout)
